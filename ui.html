@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Presensi Kamis 16 April 2024</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-storage-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <style>
+    * {
+      font-family: 'Inter', sans-serif;
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      background: radial-gradient(ellipse at bottom, #1b2735 0%, #090a0f 100%);
+      background-size: 400% 400%;
+      animation: aurora 15s ease infinite;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      padding: 20px;
+    }
+    @keyframes aurora {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    .card {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(20px);
+      padding: 30px;
+      border-radius: 20px;
+      box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+      width: 100%;
+      max-width: 400px;
+      color: white;
+    }
+    h1 {
+      font-size: 22px;
+      text-align: center;
+      margin-bottom: 20px;
+      color: #fff;
+    }
+    input, button {
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 15px;
+      border: 1px solid rgba(255,255,255,0.3);
+      border-radius: 12px;
+      font-size: 16px;
+      background: rgba(255,255,255,0.05);
+      color: #fff;
+    }
+    input::placeholder {
+      color: #ccc;
+    }
+    button {
+      background-color: #0f0f0f;
+      color: white;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    button:hover {
+      background-color: #222;
+    }
+    .success {
+      color: #9fffb3;
+      text-align: center;
+      font-weight: 600;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Presensi Kamis, 16 April 2024</h1>
+    <input type="text" id="nim" placeholder="Masukkan NIM" required />
+    <input type="text" id="nama" placeholder="Masukkan Nama" required />
+    <input type="file" id="foto" accept="image/*" required />
+    <button onclick="kirimPresensi()">Kirim Presensi</button>
+    <div id="status" class="success"></div>
+  </div>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyAPNSRHp5cZU8hlk9ytuYzbco-wOWHYp7Q",
+      authDomain: "presensi-9f223.firebaseapp.com",
+      projectId: "presensi-9f223",
+      storageBucket: "presensi-9f223.firebasestorage.app",
+      messagingSenderId: "22553387067",
+      appId: "1:22553387067:web:cfafe25a6d1b5ba45afc1e"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const storage = firebase.storage();
+    const db = firebase.firestore();
+
+    function kirimPresensi() {
+      const nim = document.getElementById('nim').value;
+      const nama = document.getElementById('nama').value;
+      const foto = document.getElementById('foto').files[0];
+      const status = document.getElementById('status');
+
+      if (!nim || !nama || !foto) {
+        status.textContent = 'Lengkapi semua data.';
+        return;
+      }
+
+      const waktu = new Date();
+      const filename = `${nim}_${waktu.getTime()}.jpg`;
+      const ref = storage.ref('presensi/' + filename);
+
+      ref.put(foto).then(snapshot => {
+        return snapshot.ref.getDownloadURL();
+      }).then(url => {
+        return db.collection('presensi').add({
+          nim,
+          nama,
+          fotoUrl: url,
+          timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        });
+      }).then(() => {
+        status.textContent = 'Presensi berhasil!';
+        document.getElementById('nim').value = '';
+        document.getElementById('nama').value = '';
+        document.getElementById('foto').value = '';
+      }).catch(err => {
+        console.error(err);
+        status.textContent = 'Gagal mengirim presensi.';
+      });
+    }
+  </script>
+</body>
+</html>
